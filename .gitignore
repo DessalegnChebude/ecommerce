@@ -1,0 +1,9 @@
+e-commerce/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.sqlite3
+.DS_Store
+*.log
+.venv/
