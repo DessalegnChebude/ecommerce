@@ -24,3 +24,12 @@ class Product(models.Model):
     
     def __str__(self):
         return f"{self.name}"
+    
+# create a productimage class to handle the multiple image upload for a particular product
+class ProductImage(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images')
+    image = models.ImageField(upload_to='product_images/') # Automatically saves to MEDIA_ROOT/product_images/
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'Image for {self.product.name}'
