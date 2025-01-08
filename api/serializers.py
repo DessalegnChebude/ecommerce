@@ -1,5 +1,5 @@
 from rest_framework import serializers 
-from products.models import Product, Category, ProductImage
+from products.models import Product, Category, ProductImage, Discount
 from orders.models import Order
 from reviews.models import Review
 from django.contrib.auth import get_user_model
@@ -44,9 +44,7 @@ class ReviewSerializer(serializers.ModelSerializer):
             return value
                 
 class ProductImageSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = ProductImage
-#         fields = ['id', 'image', 'uploaded_at']
+
     # Include product ID explicitly in the serialized output
     product_id = serializers.PrimaryKeyRelatedField(
         queryset=Product.objects.all(), 
@@ -56,16 +54,17 @@ class ProductImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductImage
         fields = ['id', 'product_id', 'image', 'uploaded_at']  # Include product_id in the fields
-            
 
+        
 class ProductSerializer(serializers.ModelSerializer):
     reviews = ReviewSerializer(many=True, read_only=True)  # Include the reviews in the product detail
     images = ProductImageSerializer(many=True, read_only=True)  # Read-only field for retrieving images
-
+    discounted_price = serializers.ReadOnlyField() # This field is used to compute the discount on products
 
     class Meta:
         model = Product
-        fields = ['id', 'name', 'description', 'price', 'category', 'stock_quantity', 'reviews','image_url', 'created_at', 'updated_at', 'created_by','images']
+        # fields = "__all__"
+        fields = ['id', 'name', 'description', 'price', 'discounted_price', 'category', 'stock_quantity', 'reviews','image_url', 'created_at', 'updated_at', 'created_by','images']
         
     def validate_price(self, value):
         if value <= 0:
@@ -76,6 +75,43 @@ class ProductSerializer(serializers.ModelSerializer):
         if value < 0:
             raise serializers.ValidationError("Stock quantity cannot be negative.")
         return value
+    
+    def get_discounted_price(self, obj):
+        """Calculate discounted_price dynamically."""
+        discount = obj.discounts.order_by('-discount_percentage').first()
+        if discount:
+            return obj.price * (1 - discount.discount_percentage / 100)
+        return obj.price
+    
+    
+class DiscountSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Discount
+        fields = ['id', 'product', 'discount_percentage', 'start_date', 'end_date']
+        
+    def create(self, validated_data):
+        discount = super().create(validated_data)
+        discount.product.apply_discount()  # Apply discount after creation
+        return discount
+
+    def update(self, instance, validated_data):
+        discount = super().update(instance, validated_data)
+        discount.product.apply_discount()  # Apply discount after update
+        return discount
+        
+# Validation used to Prevent Overlapping Discounts: Ensure a product cannot have overlapping discounts.
+    def validate(self, data):
+        product = data['product']
+        start_date = data['start_date']
+        end_date = data['end_date']
+
+        if Discount.objects.filter(
+            product=product,
+            start_date__lt=end_date,
+            end_date__gt=start_date
+        ).exists():
+            raise serializers.ValidationError("Overlapping discounts are not allowed.")
+        return data
     
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:

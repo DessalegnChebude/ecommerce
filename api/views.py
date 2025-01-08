@@ -1,7 +1,7 @@
 from django.shortcuts import render
-from .serializers import ProductImageSerializer, UserSerializer, ProductSerializer, CategorySerializer, OrderSerializer, ReviewSerializer
+from .serializers import DiscountSerializer, ProductImageSerializer, UserSerializer, ProductSerializer, CategorySerializer, OrderSerializer, ReviewSerializer
 from reviews.models import Review
-from products.models import Product, Category, ProductImage
+from products.models import Discount, Product, Category, ProductImage
 from orders.models import Order
 from rest_framework import status
 from django.db import transaction
@@ -11,7 +11,6 @@ from django.contrib.auth import get_user_model
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.permissions import  IsAuthenticatedOrReadOnly, IsAuthenticated
 from rest_framework.exceptions import ValidationError
-
 
 
 User = get_user_model()
@@ -27,6 +26,11 @@ class ProductViewSet(ModelViewSet):
     filterset_fields = ['category', 'price', 'stock_quantity']
     search_fields = ['name', 'category__name']
     permission_classes = [IsAuthenticatedOrReadOnly]
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        # Optionally apply filtering logic for discounted products
+        return queryset
 
 class CategoryViewSet(ModelViewSet):
     queryset = Category.objects.all()
@@ -105,7 +109,7 @@ class ProductImageViewSet(ModelViewSet):
     queryset = ProductImage.objects.all()
     serializer_class = ProductImageSerializer
     # permission_classes = [IsAuthenticatedOrReadOnly]
-    def create(self, request, *args, **kwargs):
-        print(request.FILES)  # Log uploaded files
-        print(request.data)   # Log other data
-        return super().create(request, *args, **kwargs)
+    
+class DiscountViewSet(ModelViewSet):
+    queryset = Discount.objects.all()
+    serializer_class = DiscountSerializer

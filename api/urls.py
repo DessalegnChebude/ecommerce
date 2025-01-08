@@ -1,6 +1,6 @@
 from rest_framework.routers import DefaultRouter
 from django.urls import path
-from .views import ProductImageViewSet, UserViewSet, ProductViewSet,CategoryViewSet,OrderViewSet, ReviewViewSet
+from .views import DiscountViewSet, ProductImageViewSet, UserViewSet, ProductViewSet,CategoryViewSet,OrderViewSet, ReviewViewSet
 
 from rest_framework_simplejwt.views import TokenObtainPairView
 
@@ -11,6 +11,7 @@ router.register('categories', CategoryViewSet)
 router.register('orders', OrderViewSet )
 router.register('reviews', ReviewViewSet)
 router.register('product-images', ProductImageViewSet, basename='product-image')
+router.register('discounts', DiscountViewSet)
 
 
 
