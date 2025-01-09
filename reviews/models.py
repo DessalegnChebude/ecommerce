@@ -11,7 +11,7 @@ class Review(models.Model):
     rating = models.PositiveIntegerField() # Rating should be out of 5
     comment = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
-    
+
     def __str__(self):
         return f'review for {self.product.name} by {self.user.username}'
     

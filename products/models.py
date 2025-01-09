@@ -19,7 +19,6 @@ class Discount(models.Model):
     start_date = models.DateTimeField()
     end_date = models.DateTimeField()
     
-    
     def clean(self):
         # Validation logic
         if self.start_date >= self.end_date:
@@ -39,7 +38,7 @@ class Product(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='products', default=None, null=True)
-    
+
     def apply_discount(self):
         # Check if there is an active discount
         active_discount = self.discounts.filter(start_date__lte=timezone.now(), end_date__gte=timezone.now()).first()
